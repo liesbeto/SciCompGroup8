@@ -14,10 +14,19 @@ def check_stability(dt, dx, c):
 def initial_disp(x, i, L, N):
     return np.sin(2*np.pi*x)
 
+def initial_disp2(x, i, L, N):
+    return np.sin(5*np.pi*x)
+
+def initial_disp3(x, i, L, N):
+    if (0.2*L < x*N < 0.4*L):
+        return np.sin(5*np.pi*x)
+    else:
+        return 0
+
 
 def set_initial_disp(u, x):
     for i in range(len(u)):
-        u[i] = initial_disp(x[i], i, len(u), N)
+        u[i] = initial_disp3(x[i], i, len(u), N)
     return u
 
 def compute_next_u(u, c, N, time_steps):
