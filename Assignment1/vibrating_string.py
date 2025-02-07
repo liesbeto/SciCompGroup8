@@ -26,7 +26,7 @@ def initial_disp3(x, i, L, N):
 
 def set_initial_disp(u, x):
     for i in range(len(u)):
-        u[i] = initial_disp3(x[i], i, len(u), N)
+        u[i] = initial_disp2(x[i], i, len(u), N)
     return u
 
 def compute_next_u(u, c, N, time_steps):
@@ -54,6 +54,7 @@ def generate_animation(x, u, L, time_steps, dt):
     
     ani = animation.FuncAnimation(fig, update, frames=time_steps, interval=dt*1000, blit=True)
     plt.show()
+    ani.save('initcond_2.mp4', writer="ffmpeg")
 
 def run_sim(L, T, N, c):
     x, dx = temp_grid(L, N)
