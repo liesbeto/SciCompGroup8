@@ -26,7 +26,7 @@ def initial_disp3(x, i, L, N):
 
 def set_initial_disp(u, x):
     for i in range(len(u)):
-        u[i] = initial_disp3(x[i], i, len(u), N)
+        u[i] = initial_disp2(x[i], i, len(u), N)
     return u
 
 def compute_next_u(u, c, N, time_steps):
