@@ -54,6 +54,7 @@ def generate_animation(x, u, L, time_steps, dt):
     
     ani = animation.FuncAnimation(fig, update, frames=time_steps, interval=dt*1000, blit=True)
     plt.show()
+    
 
 def run_sim(L, T, N, c):
     x, dx = temp_grid(L, N)
