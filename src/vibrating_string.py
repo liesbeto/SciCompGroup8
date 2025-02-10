@@ -4,27 +4,25 @@ import matplotlib.animation as animation
 
 
 class VibratingString():
+    """
+    L: Length of string
+    T: Total time of the simulation
+    N: Number of timesteps/ Number of divisions of spatial grid
+    """
     def __init__():
-        self.temporal_grid = temporal_grid(L, N)
-        self.spatial_grid = spatial_grid(T, N)
+        self.temporal_grid = grid(L, N)
+        self.spatial_grid = grid(T, N)
 
-    def temporal_grid(L, N):
-        """discretizing time steps"""
+    def grid(L, N):
+        """discretizing time steps (temporal grid) or delta X (spatial grid)"""
         return np.linspace(0, L, N+1), L/N
 
-    def spatial_grid(T, N):
-        """discretizing delta X"""
-        return np.linspace(0, T, N+1), T/N
+    def check_stability(dt, dx, c):
+        """Returns True if the timestep length is stable according to Courant-Friedrichs-Law."""
+        return (c * dt / dx) <= 1
 
     return
 
-def temporal_grid(L, N):
-    """discretizing time steps"""
-    return np.linspace(0, L, N+1), L/N
-
-def spatial_grid(T, M):
-    """discretizing delta X"""
-    return np.linspace(0, T, M+1), T/M
 
 def check_stability(dt, dx, c):
     """Courant-Friedrichs-Law or CFL conditions, how to choose time step size
