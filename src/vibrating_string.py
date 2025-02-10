@@ -2,13 +2,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-def temp_grid(L, N):
+
+class VibratingString():
+    def __init__():
+        self.temporal_grid = temporal_grid(L, N)
+        self.spatial_grid = spatial_grid(T, N)
+
+    def temporal_grid(L, N):
+        """discretizing time steps"""
+        return np.linspace(0, L, N+1), L/N
+
+    def spatial_grid(T, N):
+        """discretizing delta X"""
+        return np.linspace(0, T, N+1), T/N
+
+    return
+
+def temporal_grid(L, N):
+    """discretizing time steps"""
     return np.linspace(0, L, N+1), L/N
 
 def spatial_grid(T, M):
+    """discretizing delta X"""
     return np.linspace(0, T, M+1), T/M
 
 def check_stability(dt, dx, c):
+    """Courant-Friedrichs-Law or CFL conditions, how to choose time step size
+    Returns True if stable (lower than or equal to 1). If time step too small ..."""
     return (c * dt / dx) <= 1
 
 def initial_disp(x, i, L, N):
