@@ -13,10 +13,13 @@ def iterate_through_grid(grid, dt, D, dx):
     N = grid.shape[0]
     new_grid = copy.deepcopy(grid)
 
+    # skip row zero and last
     for i in range(1, N-1):  
         for j in range(N):
-            if j not in [0,N-1]:
+            if j not in [0, N-1]:
                 new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][j-1] + grid[i][j+1] - 4 * grid[i][j])
+            
+            # check and update according to boundary conditions
             else:
                 if j == N-1:
                     new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][j-1] + grid[i][0] - 4 * grid[i][j])
