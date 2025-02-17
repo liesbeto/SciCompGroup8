@@ -26,11 +26,12 @@ def iterate_through_grid(grid, dt, D, dx):
     
     return new_grid
 
-N = 50 
-L = 10.0 
-T= 5.0
-D = 0.1 
-max_iters = 200  
+
+N = 50 # Number of divisions (length/time scale)
+L = 10.0 # Length of square
+T = 5.0 # Total time
+D = 0.1 # Diffusion coefficient (constant)
+max_iters = 200 
 
 interval = 5
 

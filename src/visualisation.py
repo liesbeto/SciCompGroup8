@@ -20,7 +20,7 @@ def generate_animation(vib_string):
     ax.legend()
     
     def update(frame):
-        line.set_data(vib_string.temporal, vib_string.u[:, frame])
+        line.set_data(vib_string.spatial, vib_string.u[:, frame])
         return line,
     
     ani = animation.FuncAnimation(fig, update, frames=vib_string.time_steps, interval=vib_string.dt*1000, blit=True)
