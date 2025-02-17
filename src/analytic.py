@@ -14,11 +14,11 @@ def analytic_sol(x, D, t, max_range):
     t: time at which to evaluate
     max_range: """
 
-    sum = 0
+    sum_analytical = 0
     for i in range(max_range):
-        sum += erfc((1 - x + 2*i) / (2*np.sqrt(D*t))) - erfc((1 + x + 2 * i) / (2*np.sqrt(D*t)))
+        sum_analytical += erfc((1 - x + 2*i) / (2*np.sqrt(D*t))) - erfc((1 + x + 2 * i) / (2*np.sqrt(D*t)))
 
-    return
+    return sum_analytical
 
 
 def get_init_2Dgrid(N):
