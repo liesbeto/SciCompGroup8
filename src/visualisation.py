@@ -25,3 +25,7 @@ def generate_animation(vib_string):
     
     ani = animation.FuncAnimation(fig, update, frames=vib_string.time_steps, interval=vib_string.dt*1000, blit=True)
     plt.show()
+
+    # Uncomment to save file, may take some time
+    # Animation very slow, check later
+    # ani.save('results/vibrating_string_animation.gif')

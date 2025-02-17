@@ -23,9 +23,9 @@ def run_sim(L, T, N, c):
     vib_string.u = vib_string.compute_next_u(vib_string.u)
     generate_animation(vib_string)
 
-
-L = 1.0          
-N = 1000         
-c = 1.0          
-T = 1.0          
-run_sim(L, T, N, c)
+if __name__ == "__main__":
+    L = 1.0          
+    N = 1000         
+    c = 1.0          
+    T = 1.0          
+    run_sim(L, T, N, c)
