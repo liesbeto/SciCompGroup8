@@ -11,15 +11,15 @@ class VibratingString():
         self.N = N
         self.c = c
         self.L = L
-        self.temporal_grid, self.dx = self.grid(L)
-        self.spatial_grid, self.dt = self.grid(T)
+        self.temporal, self.dx = self.discretization(L)
+        self.spatial, self.dt = self.discretization(T)
         self.time_steps = int(T / self.dt)
         self.set_initial_disp(displacement_func)
        
         if not self.check_stability(c):
             raise ValueError("cfl number greater than 1")
 
-    def grid(self, endpoint):
+    def discretization(self, endpoint):
         """discretizing time steps (temporal grid) or delta X (spatial grid)"""
         return np.linspace(0, endpoint, self.N+1), endpoint/self.N
 
@@ -30,7 +30,7 @@ class VibratingString():
     def set_initial_disp(self, displacement_func):
         u = np.zeros((self.N+1, self.time_steps+1))
         for i in range(len(u)):
-            u[i] = displacement_func(self.temporal_grid[i], len(u), self.N)
+            u[i] = displacement_func(self.temporal[i], len(u), self.N)
         
         u[:, 1] = np.copy(u[:, 0])
 
