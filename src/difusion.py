@@ -6,8 +6,12 @@ from scipy.special import erfc
 import time
 import copy
 
+# We assume square dimensions!
+# We assume 0 ≤ x, y ≤ 1.
+# Boundary conditions: c(x, y = 1; t) = 1 and c(x, y = 0; t) = 0
+
 #introduce tolerance conditions later
-def analytical_solution(x, t, D, max_range = 5):
+def analytical_solution(x, t, D, max_range=10):
     """
     D: diffusion coefficient
     x: space/place
@@ -16,11 +20,10 @@ def analytical_solution(x, t, D, max_range = 5):
 
     sum_analytical = np.zeros_like(x)
     for i in range(max_range):
-        term1 = erfc((1 - x + 2 * i) / (2*np.sqrt(D*t)))
-        term2 = erfc((1 + x + 2 * i) / (2*np.sqrt(D*t)))
-        sum_analytical += term1 - term2
+        sum_analytical += erfc((1 - x + 2 * i) / (2*np.sqrt(D*t))) - erfc((1 + x + 2 * i) / (2*np.sqrt(D*t)))
 
     return sum_analytical
+
 
 def initialize_grid(N):
     grid = np.zeros((N, N))
@@ -29,10 +32,35 @@ def initialize_grid(N):
     
     return grid
 
-def get_next_grid(grid, dt, D, dx):
+# Still work in progress
+def boundary_grid(grid, dt, D, dx):
 
     N = grid.shape[0]
     new_grid = copy.deepcopy(grid)
+
+    # Center of grid
+    for i in range(1, N-1):
+        for j in range(1, N-1):
+            new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][j-1] + grid[i][j+1] - 4 * grid[i][j])
+
+        # Boundary where j=0
+        new_grid[i][0] = grid[i][0] + (dt * D / dx**2) * (grid[i-1][0] + grid[i+1][0] + grid[i][1] + grid[i][N-1] - 4 * grid[i][0])
+        # Boundary where j=N-1
+        new_grid[i][N-1] = grid[i][N-1] + (dt * D / dx**2) * (grid[i-1][N-1] + grid[i+1][N-1] + grid[i][N-2] + grid[i][0] - 4 * grid[i][N-1])
+    
+    # Boundary of grid where i=0 and i=N-1
+    for j in range(1, N-1):
+        new_grid[0][j] = grid[0][j] + (dt * D / dx**2) * (grid[1][j] + grid[N-1][j] + grid[0][j-1] + grid[0][j+1] - 4 * grid[0][j])
+        new_grid[N-1][j] = grid[N-1][j] + (dt * D / dx**2) * (grid[0][j] + grid[N-2][j] + grid[N-1][j-1] + grid[N-1][j+1] - 4 * grid[N-1][j])
+
+    return
+
+
+def get_next_grid(grid, dt, D, dx):
+
+    N = grid.shape[0]
+    new_grid = grid.copy()
+
     for i in range(1, N-1):
         for j in range(N):
             if j not in [0, N-1]:
@@ -43,6 +71,8 @@ def get_next_grid(grid, dt, D, dx):
                 else:
                     new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][N-1] + grid[i][j+1] - 4 * grid[i][j])
     return new_grid
+
+
 def get_next_grid_method(grid, dt, D, dx, method="Jacobi", omega=1.5):
     """Compute next time step using Jacobi, Gauss-Seidel, or SOR method."""
     N = grid.shape[0]
@@ -76,6 +106,7 @@ def get_next_grid_method(grid, dt, D, dx, method="Jacobi", omega=1.5):
 
     return new_grid  # Jacobi returns a new array
 
+
 def simulate_diffusion_2d(N, D, dx, dt, T, save_interval=100):
     # Check stability condition
     stability_param = 4 * D * dt / (dx * dx)
@@ -100,6 +131,8 @@ def simulate_diffusion_2d(N, D, dx, dt, T, save_interval=100):
         if (step % save_interval == 0) or any(abs(current_time - t) < dt for t in special_times):
             time_points.append(current_time)
             c_history.append(c.copy())
+
+
 def simulate_diffusion_2d_methods(N, D, dx, dt, T, method="Jacobi", omega=1.5, save_interval=100):
     """Simulate diffusion using Jacobi, Gauss-Seidel, or SOR."""
     stability_param = 4 * D * dt / (dx * dx)
@@ -226,51 +259,51 @@ def create_animation(times, c_history, N, dx):
     return ani
 
 
-# Simulation parameters
-N= 50      # Number of grid points (must be square grid for provided update function)
-L = 1.0   # Domain size
-dx= L/(N-1)  # Grid spacing
-D = 1.0              # Diffusion coefficient
+# # Simulation parameters
+# N= 50      # Number of grid points (must be square grid for provided update function)
+# L = 1.0   # Domain size
+# dx= L/(N-1)  # Grid spacing
+# D = 1.0              # Diffusion coefficient
 
-# Stability-limited time step
-dt = 0.24 * dx**2 / D  
-T = 1.0   
+# # Stability-limited time step
+# dt = 0.24 * dx**2 / D  
+# T = 1.0   
     
-print(f"Grid: {N}x{N}, dx={dx:.5f}, dt={dt:.6f}")
-print(f"Stability parameter: {4*D*dt/dx**2:.5f} (must be ≤ 1)")
+# print(f"Grid: {N}x{N}, dx={dx:.5f}, dt={dt:.6f}")
+# print(f"Stability parameter: {4*D*dt/dx**2:.5f} (must be ≤ 1)")
     
-# Run simulation
-time_points, c_history = simulate_diffusion_2d( N, D, dx, dt, T, save_interval=100)
+# # Run simulation
+# time_points, c_history = simulate_diffusion_2d( N, D, dx, dt, T, save_interval=100)
 
-x_points = np.linspace(0, L, N)
-
-
-target_times = [0, 0.001, 0.01, 0.1, 1.0]
-selected_indices = []
-selected_times = []
-
-for target in target_times:
-    idx = np.argmin(np.abs(np.array(time_points) - target))#Finding indices which are closest to the target timesteps
-    selected_indices.append(idx)
-    selected_times.append(time_points[idx])
+# x_points = np.linspace(0, L, N)
 
 
-validate_against_analytical(x_points, [time_points[i] for i in selected_indices], D, [c_history[i] for i in selected_indices], N)
+# target_times = [0, 0.001, 0.01, 0.1, 1.0]
+# selected_indices = []
+# selected_times = []
+
+# for target in target_times:
+#     idx = np.argmin(np.abs(np.array(time_points) - target))#Finding indices which are closest to the target timesteps
+#     selected_indices.append(idx)
+#     selected_times.append(time_points[idx])
 
 
-plot_2d_concentration([time_points[i] for i in selected_indices],[c_history[i] for i in selected_indices], N, dx)
+# validate_against_analytical(x_points, [time_points[i] for i in selected_indices], D, [c_history[i] for i in selected_indices], N)
 
-ani = create_animation(time_points, c_history, N, dx)
 
-methods = ["Jacobi", "Gauss-Seidel", "SOR"]
-omega = 1.5  # Relaxation factor for SOR
+# plot_2d_concentration([time_points[i] for i in selected_indices],[c_history[i] for i in selected_indices], N, dx)
 
-for method in methods:
-    time_points, c_history = simulate_diffusion_2d(N, D, dx, dt, T, method=method, omega=omega)
+# ani = create_animation(time_points, c_history, N, dx)
 
-    y_points = np.linspace(0, L, N)
-    selected_indices = np.linspace(0, len(time_points) - 1, 5, dtype=int)
-    selected_times = [time_points[i] for i in selected_indices]
-    selected_c_history = [c_history[i] for i in selected_indices]
+# methods = ["Jacobi", "Gauss-Seidel", "SOR"]
+# omega = 1.5  # Relaxation factor for SOR
 
-    validate_methods(y_points, selected_times, D, selected_c_history, N)
+# for method in methods:
+#     time_points, c_history = simulate_diffusion_2d(N, D, dx, dt, T, method=method, omega=omega)
+
+#     y_points = np.linspace(0, L, N)
+#     selected_indices = np.linspace(0, len(time_points) - 1, 5, dtype=int)
+#     selected_times = [time_points[i] for i in selected_indices]
+#     selected_c_history = [c_history[i] for i in selected_indices]
+
+#     validate_methods(y_points, selected_times, D, selected_c_history, N)

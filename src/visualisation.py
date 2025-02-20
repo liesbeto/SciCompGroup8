@@ -3,8 +3,10 @@ in animation form'''
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import numpy as np
 
 from vibrating_string import VibratingString
+from difusion import analytical_solution
 
 
 def generate_animation(vib_string):
@@ -29,6 +31,7 @@ def generate_animation(vib_string):
     # Uncomment to save file, may take some time
     # Animation very slow, check later
     # ani.save('results/vibrating_string_animation.gif')
+    return ani
 
 
 def vibrating_string_graphs(n_graphs):
@@ -45,4 +48,23 @@ def vibrating_string_graphs(n_graphs):
     line, = ax.plot([], [], 'b-', lw=2, label="Wave Motion")
     ax.legend()
 
-    return
+    return fig, ax
+
+
+def analytical_plot(D, L, scatter_on=False):
+    t_values = [0.001, 0.01, 0.1, 1]
+    x_values = np.linspace(0, L, 100)
+
+    fig = plt.figure(figsize=(10, 8))
+
+    for t in t_values:
+        analytic_sum = analytical_solution(x_values, t, D, max_range=10)
+        plt.plot(x_values, analytic_sum, label=f't = {t}')
+        if scatter_on:
+            plt.scatter(x_values, analytic_sum)
+
+    plt.xlabel('y position')
+    plt.ylabel('Concentration c(y)')
+    plt.show()
+
+    return fig
