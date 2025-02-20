@@ -48,6 +48,8 @@ def iterate_through_grid(grid, dt, D, dx):
     return new_grid
 
 
+
+
 N = 50 # Number of divisions (length/time scale)
 L = 10.0 # Length of square
 T = 5.0 # Total time
@@ -59,6 +61,8 @@ interval = 5
 
 dx= L/N
 dt = dx**2 / (4 * D)
+
+
 
 grid = get_init_2Dgrid(N)
 
@@ -80,3 +84,22 @@ ani = animation.FuncAnimation(fig, update, frames=max_iters, interval=interval, 
 
 plt.title("2D Diffusion Simulation")
 plt.show()
+
+
+T = 5
+L = 10
+D = 0.1
+N = 50
+max_range = 100
+
+dx = L / N
+dt = dx**2 / (4*D)
+
+t_values = np.linspace(0, T, 5)
+x_values = np.linspace(0, L, N)
+
+values = []
+for x in x_values:
+    values.append(analytic_sol(x, D=1, t=0.1, max_range=100))
+
+
