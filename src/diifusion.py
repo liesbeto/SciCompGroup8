@@ -1,64 +1,188 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib import cm
+from scipy.special import erfc
+import time
 import copy
-import matplotlib.pyplot as plt 
-import matplotlib.animation as animation
 
-def get_init_2Dgrid(N):
+#introduce tolerance conditions later
+def analytical_solution(x, t, D, max_range = 5):
+    """
+    D: diffusion coefficient
+    x: space/place
+    t: time at which to evaluate
+    max_range: """
+
+    sum_analytical = np.zeros_like(x)
+    for i in range(max_range):
+        term1 = erfc((1 - x + 2 * i) / (2*np.sqrt(D*t)))
+        term2 = erfc((1 + x + 2 * i) / (2*np.sqrt(D*t)))
+        sum_analytical += term1 - term2
+
+    return sum_analytical
+
+def initialize_grid(N):
     grid = np.zeros((N, N))
-    grid[0, :] = 1  
-    grid[-1, :] = 0
+
+    grid[-1, :] = 1.0
+    
     return grid
 
-def iterate_through_grid(grid, dt, D, dx):
+def get_next_grid(grid, dt, D, dx):
+
     N = grid.shape[0]
     new_grid = copy.deepcopy(grid)
-
-    # skip row zero and last
-    for i in range(1, N-1):  
+    for i in range(1, N-1):
         for j in range(N):
             if j not in [0, N-1]:
                 new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][j-1] + grid[i][j+1] - 4 * grid[i][j])
-            
-            # check and update according to boundary conditions
             else:
                 if j == N-1:
                     new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][j-1] + grid[i][0] - 4 * grid[i][j])
                 else:
                     new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][N-1] + grid[i][j+1] - 4 * grid[i][j])
-    
-    
     return new_grid
 
+def simulate_diffusion_2d(N, D, dx, dt, T, save_interval=100):
+    # Check stability condition
+    stability_param = 4 * D * dt / (dx * dx)
+    if stability_param > 1:
+        dt = 0.95 * dx**2 / (4 * D)
+  
+    c = initialize_grid(N)
+    
+ 
+    n_steps = int(T / dt)
+    time_points = [0.0]
+    c_history = [c.copy()]
+    
+    print(f"Starting simulation with {n_steps} time steps")
 
-N = 50 # Number of divisions (length/time scale)
-L = 10.0 # Length of square
-T = 5.0 # Total time
-D = 0.1 # Diffusion coefficient (constant)
-max_iters = 200 
+    
+    for step in range(1, n_steps+1):
+        c = get_next_grid(c, dt, D, dx)
+        current_time = step * dt
 
-interval = 5
-
-
-dx= L/N
-dt = dx**2 / (4 * D)
-
-grid = get_init_2Dgrid(N)
-
-
-fig, ax = plt.subplots()
-heatmap = ax.imshow(grid, cmap="hot", interpolation="nearest", vmin=0, vmax=1)
-plt.colorbar(heatmap)
-
-
-def update(frame):
-    global grid
-    grid = iterate_through_grid(grid, dt, D, dx)
-    heatmap.set_array(grid)
-    return [heatmap]
-
-
-ani = animation.FuncAnimation(fig, update, frames=max_iters, interval=interval, blit=False)
+        special_times = [0.001, 0.01, 0.1, 1.0]
+        if (step % save_interval == 0) or any(abs(current_time - t) < dt for t in special_times):
+            time_points.append(current_time)
+            c_history.append(c.copy())
+            
 
 
-plt.title("2D Diffusion Simulation")
-plt.show()
+    return time_points, c_history
+
+def validate_against_analytical(x_points, times, D, c_history, N):
+
+    plt.figure(figsize=(12, 8))
+    
+    # Get middle x-index
+    mid_x = N // 2
+    
+    for i, t in enumerate(times):
+        if t > 0:  
+
+            numerical = c_history[i][:, mid_x]
+            
+            # Calculate analytical solution
+            analytical = np.array([analytical_solution(x, t, D) for x in x_points])
+            
+            # Plot both solutions
+            plt.plot(x_points, numerical, 'o-', label=f'Numerical, t={t:.3f}')
+            plt.plot(x_points, analytical, '--', label=f'Analytical, t={t:.3f}')
+    
+    plt.xlabel('x position')
+    plt.ylabel('Concentration c(x)')
+    plt.title('Comparison between numerical and analytical solutions')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('validation_plot.png', dpi=300)
+    plt.show()
+
+def plot_2d_concentration(times, c_history, N, dx):
+
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    axes = axes.flatten()
+    
+    x = np.linspace(0, (N-1)*dx, N)
+    y = np.linspace(0, (N-1)*dx, N)
+    X, Y = np.meshgrid(x, y)
+    
+    for i, (t, c) in enumerate(zip(times, c_history)):
+        if i < len(axes):
+            ax = axes[i]
+            im = ax.pcolormesh(X, Y, c, cmap='viridis', shading='auto')
+            ax.set_title(f't = {t:.3f}')
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            fig.colorbar(im, ax=ax, label='Concentration')
+    
+    plt.tight_layout()
+    plt.savefig('concentration_plots.png', dpi=300)
+    plt.show()
+
+def create_animation(times, c_history, N, dx):
+    """
+    Create an animation of the concentration field over time
+    """
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    x = np.linspace(0, (N-1)*dx, N)
+    y = np.linspace(0, (N-1)*dx, N)
+    X, Y = np.meshgrid(x, y)
+    
+    # Initial plot
+    im = ax.pcolormesh(X, Y, c_history[0], cmap='viridis', shading='auto', vmin=0, vmax=1)
+    title = ax.set_title(f't = {times[0]:.5f}')
+    fig.colorbar(im, ax=ax, label='Concentration')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    
+    def update(frame):
+        im.set_array(c_history[frame].ravel())
+        title.set_text(f't = {times[frame]:.5f}')
+        return [im, title]
+    
+    ani = FuncAnimation(fig, update, frames=range(len(times)), blit=True)
+    ani.save('diffusion_animation.gif', writer='pillow', fps=15)
+    plt.show()
+    
+    return ani
+
+
+# Simulation parameters
+N= 50      # Number of grid points (must be square grid for provided update function)
+L = 1.0   # Domain size
+dx= L/(N-1)  # Grid spacing
+D = 1.0              # Diffusion coefficient
+
+# Stability-limited time step
+dt = 0.24 * dx**2 / D  
+T = 1.0   
+    
+print(f"Grid: {N}x{N}, dx={dx:.5f}, dt={dt:.6f}")
+print(f"Stability parameter: {4*D*dt/dx**2:.5f} (must be ≤ 1)")
+    
+# Run simulation
+time_points, c_history = simulate_diffusion_2d( N, D, dx, dt, T, save_interval=100)
+
+x_points = np.linspace(0, L, N)
+
+
+target_times = [0, 0.001, 0.01, 0.1, 1.0]
+selected_indices = []
+selected_times = []
+
+for target in target_times:
+    idx = np.argmin(np.abs(np.array(time_points) - target))#Finding indices which are closest to the target timesteps
+    selected_indices.append(idx)
+    selected_times.append(time_points[idx])
+
+
+validate_against_analytical(x_points, [time_points[i] for i in selected_indices], D, [c_history[i] for i in selected_indices], N)
+
+
+plot_2d_concentration([time_points[i] for i in selected_indices],[c_history[i] for i in selected_indices], N, dx)
+
+ani = create_animation(time_points, c_history, N, dx)
