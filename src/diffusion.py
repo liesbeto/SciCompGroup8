@@ -120,6 +120,10 @@ def gauss_seidel_method(grid, tolerance, max_iterations):
     return grid
 
 
+def sor_method():
+    return
+
+
 def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
 
     def grid_center(grid, i, j, dt, dx, D, N):
