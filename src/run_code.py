@@ -36,5 +36,7 @@ if __name__ == "__main__":
     c = 1.0          
     T = 1.0          
     #run_vibrating_string(L, T, N, c)
+
+    # Plot analytical solution
     fig = analytical_plot(D=1, L=1)
     

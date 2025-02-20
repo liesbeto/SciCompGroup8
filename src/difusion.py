@@ -28,17 +28,28 @@ def analytical_solution(x, t, D, max_range=10):
 
 def initialize_grid(N):
     grid = np.zeros((N, N))
-
     grid[-1, :] = 1.0
     
     return grid
+
 
 # Still work in progress
 def boundary_grid(grid, dt, D, dx):
 
     N = grid.shape[0]
-    new_grid = copy.deepcopy(grid)
+    new_grid = copy.grid()
 
+    for i in range (0, N):
+        for j in range (0, N):
+            if i==0 and j==0:
+                state = 'corner'
+            elif i == N-1 and j==0:
+                state = 'corner'
+            elif i==0 and j==N-1:
+                state = 'corner'
+            elif i==N-1 and j==N-1:
+                state = 'corner'
+             
     # Center of grid
     for i in range(1, N-1):
         for j in range(1, N-1):
@@ -58,30 +69,43 @@ def boundary_grid(grid, dt, D, dx):
 
 
 def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
+
+    def grid_center(grid, i, j, dt, dx, D, N):
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, N-1] + grid[i, j+1] - 4 * grid[i, j])
+
+    def grid_boundary_right(grid, i, j, dt, dx, D, N):
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0] - 4 * grid[i, j])
+    
+    def grid_boundary_left(grid, i, j, dt, dx, D, N):
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1] - 4 * grid[i, j])
+
     N = grid.shape[0]
-    new_grid = grid.copy() if method in ["Jacobi", "Explicit"] else grid  # Explicit & Jacobi use new grid, others modify in place
+
+    # Explicit & Jacobi use new grid, others modify in place
+    new_grid = grid.copy() if method in ["Jacobi", "Explicit"] else grid
 
     if method == "Explicit":
         old_grid = copy.deepcopy(grid)
         for i in range(1, N-1):
             for j in range(N):
                 if j == 0:
-                    new_grid[i, j] = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, N-1] + old_grid[i, j+1] - 4 * old_grid[i, j])
+                    new_grid[i, j] = center_grid(old_grid, i, j, dt, dx, D, N)
                 elif j == N - 1:
-                    new_grid[i, j] = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, j-1] + old_grid[i, 0] - 4 * old_grid[i, j])
+                    new_grid[i, j] = grid_boundary_right(old_grid, i, j, dt, dx, D, N)
                 else:
-                    new_grid[i, j] = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, j-1] + old_grid[i, j+1] - 4 * old_grid[i, j])
+                    new_grid[i, j] = grid_boundary_left(old_grid, i, j, dt, dx, D, N)
 
     elif method in ["Jacobi", "Gauss-Seidel", "SOR"]:
-        old_grid = grid.copy() if method == "Jacobi" else grid  # Jacobi uses a separate copy
+        # Jacobi uses a separate copy
+        old_grid = grid.copy() if method == "Jacobi" else grid 
         for i in range(1, N - 1):
             for j in range(N):
                 if j == 0:
-                    value = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, N-1] + old_grid[i, j+1] - 4 * old_grid[i, j])
+                    value = center_grid(old_grid, i, j, dt, dx, D, N)
                 elif j == N - 1:
-                    value = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, j-1] + old_grid[i, 0] - 4 * old_grid[i, j])
+                    value = grid_boundary_right(old_grid, i, j, dt, dx, D, N)
                 else:
-                    value = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, j-1] + old_grid[i, j+1] - 4 * old_grid[i, j])
+                    value = grid_boundary_left(old_grid, i, j, dt, dx, D, N)
                 
                 if method == "SOR":
                     grid[i, j] = (1 - omega) * grid[i, j] + omega * value
