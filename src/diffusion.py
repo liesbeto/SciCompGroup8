@@ -58,6 +58,18 @@ def explicit_method(grid, dt, D, dx):
     return new_grid
 
 
+def jacobi_method(tolerance, max_iterations):
+    N = grid.shape[0]
+    new_grid = np.copy(grid)
+
+    for iter in range(max_iterations):
+        #perfom grid until tolerance
+        maximum_difference = 0
+
+
+    return
+
+
 def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
 
     def grid_center(grid, i, j, dt, dx, D, N):
