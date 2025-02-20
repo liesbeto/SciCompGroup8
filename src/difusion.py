@@ -33,39 +33,30 @@ def initialize_grid(N):
     return grid
 
 
-# Still work in progress
-def boundary_grid(grid, dt, D, dx):
+def explicit_method(grid, dt, D, dx):
+    """Applies periodic wrapping boundary conditions. Top and bottom are set to 1 and 0 respectively."""
+    def grid_center(grid, i, j, dt, dx, D, N):
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, N-1] + grid[i, j+1] - 4 * grid[i, j])
+
+    def grid_boundary_right(grid, i, j, dt, dx, D, N):
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0] - 4 * grid[i, j])
+    
+    def grid_boundary_left(grid, i, j, dt, dx, D, N):
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1] - 4 * grid[i, j])
 
     N = grid.shape[0]
-    new_grid = copy.grid()
+    new_grid = grid.copy()
 
-    for i in range (0, N):
-        for j in range (0, N):
-            if i==0 and j==0:
-                state = 'corner'
-            elif i == N-1 and j==0:
-                state = 'corner'
-            elif i==0 and j==N-1:
-                state = 'corner'
-            elif i==N-1 and j==N-1:
-                state = 'corner'
-             
-    # Center of grid
     for i in range(1, N-1):
-        for j in range(1, N-1):
-            new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][j-1] + grid[i][j+1] - 4 * grid[i][j])
+        for j in range(N):
+            if j == 0:
+                new_grid[i, j] = grid_boundary_left(grid, i, j, dt, dx, D, N)
+            elif j == N - 1:
+                new_grid[i, j] = grid_boundary_right(grid, i, j, dt, dx, D, N)
+            else:
+                new_grid[i, j] = grid_center(grid, i, j, dt, dx, D, N)
 
-        # Boundary where j=0
-        new_grid[i][0] = grid[i][0] + (dt * D / dx**2) * (grid[i-1][0] + grid[i+1][0] + grid[i][1] + grid[i][N-1] - 4 * grid[i][0])
-        # Boundary where j=N-1
-        new_grid[i][N-1] = grid[i][N-1] + (dt * D / dx**2) * (grid[i-1][N-1] + grid[i+1][N-1] + grid[i][N-2] + grid[i][0] - 4 * grid[i][N-1])
-    
-    # Boundary of grid where i=0 and i=N-1
-    for j in range(1, N-1):
-        new_grid[0][j] = grid[0][j] + (dt * D / dx**2) * (grid[1][j] + grid[N-1][j] + grid[0][j-1] + grid[0][j+1] - 4 * grid[0][j])
-        new_grid[N-1][j] = grid[N-1][j] + (dt * D / dx**2) * (grid[0][j] + grid[N-2][j] + grid[N-1][j-1] + grid[N-1][j+1] - 4 * grid[N-1][j])
-
-    return
+    return new_grid
 
 
 def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
