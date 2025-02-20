@@ -59,7 +59,8 @@ def explicit_method(grid, dt, D, dx):
 
 
 #Should we still apply boundary conditions?
-def jacobi_method(grid, N, tolerance, max_iterations):
+# Consider nupmy array operations due to bad practice numpy + for loops
+def jacobi_method(grid, tolerance, max_iterations):
     N = grid.shape[0]
     new_grid = np.copy(grid)
 
@@ -85,6 +86,36 @@ def jacobi_method(grid, N, tolerance, max_iterations):
             break
 
         grid = np.copy(new_grid)
+
+    return grid
+
+
+def gauss_seidel_method(grid, tolerance, max_iterations):
+    N = grid.shape[0]
+
+    for iter in range(max_iterations):
+        maximum_difference = 0
+
+        for i in range(1, N-1):
+            for j in range(N):
+                # Save for tolerance
+                old = grid[i, j]
+
+                # Left boundary
+                if j == 0:
+                    grid[i, j] = 0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j+1] + grid[i, N-1])
+                # Right boundary
+                elif j == N - 1:
+                    grid[i, j] = 0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0])
+                else:
+                    grid[i, j] = 0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1])
+
+                # update maximum difference
+                # Is there a way to do this out of multiple loops?
+                maximum_difference = max(maximum_difference, abs(grid[i, j] - old))
+
+        if maximum_difference < tolerance:
+            break
 
     return grid
 
