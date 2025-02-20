@@ -88,18 +88,10 @@ dt = dx**2 / (4 * D)
     # plt.show()
 
 
-T = 5
-L = 1
 D = 1
-N = 50
-max_range = 100
-
-dx = L / N
-dt = dx**2 / (4*D)
-
+L = 1
 t_values = [0.001, 0.01, 0.1, 1]
 x_values = np.linspace(0, L, 100)
-D = 1
 
 plt.figure(figsize=(10, 8))
 
