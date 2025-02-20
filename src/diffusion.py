@@ -108,28 +108,40 @@ def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
 
 
 def simulate_diffusion_2d(N, D, dx, dt, T, method="Explicit", omega=1.5, save_interval=100):
+    """Explain what this function does
+    omega: relaxation parameter
+    save_interval; interval at which the grid is saved"""
     # Check stability condition
     stability_param = 4 * D * dt / (dx * dx)
+
+    # Changes stability parameter
+    # Do we want to repeat it?
     if stability_param > 1:
+        print("Adjusting stability parameter due to instability")
         dt = 0.95 * dx**2 / (4 * D)
+        stability_param = 4 * D * dt / (dx * dx)
     
+    # Initialize the grid and variables
     c = initialize_grid(N)
+    c_history = [c.copy()]
+
     n_steps = int(T / dt)
     time_points = [0.0]
-    c_history = [c.copy()]
-    
-    print(f"Running {method} method for {n_steps} steps")
-    
     special_times = [0.001, 0.01, 0.1, 1.0]
+
+    # Compute and store the grid and time step
     for step in range(1, n_steps + 1):
         c = get_next_grid(c, dt, D, dx, method=method, omega=omega)
         current_time = step * dt
         
+        # Only save grid at specific time intervals or at specific time points
+        # Rewrite? seems weird
         if (step % save_interval == 0) or any(abs(current_time - t) < dt for t in special_times):
             time_points.append(current_time)
             c_history.append(c.copy())
     
     return time_points, c_history
+
 
 def validate_against_analytical(x_points, times, D, c_history, N):
 
@@ -299,4 +311,4 @@ def test_methods(N, D, dx, dt, T, L):
 
         validate_against_analytical(x_points, selected_times, D, selected_c_history, N)
 
-#test_methods(N, D, dx, dt, T, L)
+test_methods(N, D, dx, dt, T, L)
