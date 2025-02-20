@@ -34,15 +34,14 @@ def initialize_grid(N):
 
 
 def explicit_method(grid, dt, D, dx):
-    """Applies periodic wrapping boundary conditions. Top and bottom are set to 1 and 0 respectively."""
     def grid_center(grid, i, j, dt, dx, D, N):
-        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, N-1] + grid[i, j+1] - 4 * grid[i, j])
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1] - 4 * grid[i, j])
 
     def grid_boundary_right(grid, i, j, dt, dx, D, N):
         return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0] - 4 * grid[i, j])
-    
+
     def grid_boundary_left(grid, i, j, dt, dx, D, N):
-        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1] - 4 * grid[i, j])
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j+1] + grid[i, N-1] - 4 * grid[i, j])
 
     N = grid.shape[0]
     new_grid = grid.copy()
@@ -62,13 +61,13 @@ def explicit_method(grid, dt, D, dx):
 def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
 
     def grid_center(grid, i, j, dt, dx, D, N):
-        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, N-1] + grid[i, j+1] - 4 * grid[i, j])
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1] - 4 * grid[i, j])
 
     def grid_boundary_right(grid, i, j, dt, dx, D, N):
         return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0] - 4 * grid[i, j])
-    
+
     def grid_boundary_left(grid, i, j, dt, dx, D, N):
-        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1] - 4 * grid[i, j])
+        return grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j+1] + grid[i, N-1] - 4 * grid[i, j])
 
     N = grid.shape[0]
 
@@ -80,11 +79,11 @@ def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
         for i in range(1, N-1):
             for j in range(N):
                 if j == 0:
-                    new_grid[i, j] = center_grid(old_grid, i, j, dt, dx, D, N)
+                    new_grid[i, j] = grid_boundary_left(old_grid, i, j, dt, dx, D, N)
                 elif j == N - 1:
                     new_grid[i, j] = grid_boundary_right(old_grid, i, j, dt, dx, D, N)
                 else:
-                    new_grid[i, j] = grid_boundary_left(old_grid, i, j, dt, dx, D, N)
+                    new_grid[i, j] = grid_center(old_grid, i, j, dt, dx, D, N)
 
     elif method in ["Jacobi", "Gauss-Seidel", "SOR"]:
         # Jacobi uses a separate copy
@@ -92,11 +91,11 @@ def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
         for i in range(1, N - 1):
             for j in range(N):
                 if j == 0:
-                    value = center_grid(old_grid, i, j, dt, dx, D, N)
+                    value = grid_boundary_left(old_grid, i, j, dt, dx, D, N)
                 elif j == N - 1:
                     value = grid_boundary_right(old_grid, i, j, dt, dx, D, N)
                 else:
-                    value = grid_boundary_left(old_grid, i, j, dt, dx, D, N)
+                    value = grid_center(old_grid, i, j, dt, dx, D, N)
                 
                 if method == "SOR":
                     grid[i, j] = (1 - omega) * grid[i, j] + omega * value
@@ -141,7 +140,6 @@ def validate_against_analytical(x_points, times, D, c_history, N):
     
     for i, t in enumerate(times):
         if t > 0:  
-
             numerical = c_history[i][:, mid_x]
             
             # Calculate analytical solution
@@ -236,10 +234,12 @@ def compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit'):
     target_times = [0, 0.001, 0.01, 0.1, 1.0]
     selected_indices = []
     selected_times = []
+
     for target in target_times:
         idx = np.argmin(np.abs(np.array(time_points) - target))#Finding indices which are closest to the target timesteps
         selected_indices.append(idx)
         selected_times.append(time_points[idx])
+
     validate_against_analytical(x_points, [time_points[i] for i in selected_indices], D, [c_history[i] for i in selected_indices], N)
     plot_2d_concentration([time_points[i] for i in selected_indices],[c_history[i] for i in selected_indices], N, dx)
     ani = create_animation(time_points, c_history, N, dx)
@@ -252,13 +252,13 @@ dx= L/(N-1)  # Grid spacing
 D = 1.0              # Diffusion coefficient
 
 # # Stability-limited time step
-# dt = 0.24 * dx**2 / D  
-# T = 1.0   
+dt = 0.24 * dx**2 / D  
+T = 1.0   
     
 # print(f"Grid: {N}x{N}, dx={dx:.5f}, dt={dt:.6f}")
 # print(f"Stability parameter: {4*D*dt/dx**2:.5f} (must be ≤ 1)")
     
-# compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit')
+compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit')
 # # Run simulation
 # time_points, c_history = simulate_diffusion_2d( N, D, dx, dt, T,"Explicit", save_interval=100)
 # # N, D, dx, dt, T, method="Explicit", omega=1.5, save_interval=100
@@ -299,4 +299,4 @@ def test_methods(N, D, dx, dt, T, L):
 
         validate_against_analytical(x_points, selected_times, D, selected_c_history, N)
 
-test_methods(N, D, dx, dt, T, L)
+#test_methods(N, D, dx, dt, T, L)

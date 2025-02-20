@@ -29,6 +29,7 @@ def get_init_2Dgrid(N):
     grid[-1, :] = 0
     return grid
 
+
 def iterate_through_grid(grid, dt, D, dx):
     N = grid.shape[0]
     new_grid = copy.deepcopy(grid)
