@@ -58,16 +58,35 @@ def explicit_method(grid, dt, D, dx):
     return new_grid
 
 
-def jacobi_method(tolerance, max_iterations):
+#Should we still apply boundary conditions?
+def jacobi_method(grid, N, tolerance, max_iterations):
     N = grid.shape[0]
     new_grid = np.copy(grid)
 
     for iter in range(max_iterations):
-        #perfom grid until tolerance
         maximum_difference = 0
 
+        for i in range(1, N-1):
+            for j in range(N):
+                # Left boundary
+                if j == 0:
+                    new_grid[i, j] = 0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j+1] + grid[i, N-1])
+                # Right boundary
+                elif j == N - 1:
+                    new_grid[i, j] = 0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0])
+                else:
+                    new_grid[i, j] = 0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1])
 
-    return
+                # update maximum difference
+                # Is there a way to do this out of multiple loops?
+                maximum_difference = max(maximum_difference, abs(new_grid[i, j] - grid[i, j]))
+
+        if maximum_difference < tolerance:
+            break
+
+        grid = np.copy(new_grid)
+
+    return grid
 
 
 def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
