@@ -43,6 +43,38 @@ def get_next_grid(grid, dt, D, dx):
                 else:
                     new_grid[i][j] = grid[i][j] + (dt * D / dx**2) * (grid[i-1][j] + grid[i+1][j] + grid[i][N-1] + grid[i][j+1] - 4 * grid[i][j])
     return new_grid
+def get_next_grid_method(grid, dt, D, dx, method="Jacobi", omega=1.5):
+    """Compute next time step using Jacobi, Gauss-Seidel, or SOR method."""
+    N = grid.shape[0]
+    new_grid = grid.copy()
+
+    if method == "Jacobi":
+        old_grid = grid.copy()
+        for i in range(1, N - 1):
+            for j in range(N):
+                if j == 0:
+                    new_grid[i, j] = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, N-1] + old_grid[i, j+1] - 4 * old_grid[i, j])
+                elif j == N - 1:
+                    new_grid[i, j] = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, j-1] + old_grid[i, 0] - 4 * old_grid[i, j])
+                else:
+                    new_grid[i, j] = old_grid[i, j] + (dt * D / dx**2) * (old_grid[i-1, j] + old_grid[i+1, j] + old_grid[i, j-1] + old_grid[i, j+1] - 4 * old_grid[i, j])
+
+    elif method in ["Gauss-Seidel", "SOR"]:
+        for i in range(1, N - 1):
+            for j in range(N):
+                if j == 0:
+                    value = grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, N-1] + grid[i, j+1] - 4 * grid[i, j])
+                elif j == N - 1:
+                    value = grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0] - 4 * grid[i, j])
+                else:
+                    value = grid[i, j] + (dt * D / dx**2) * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1] - 4 * grid[i, j])
+                if method == "SOR":
+                    grid[i, j] = (1 - omega) * grid[i, j] + omega * value
+                else:
+                    grid[i, j] = value
+        return grid  # Gauss-Seidel and SOR update in-place
+
+    return new_grid  # Jacobi returns a new array
 
 def simulate_diffusion_2d(N, D, dx, dt, T, save_interval=100):
     # Check stability condition
@@ -68,6 +100,29 @@ def simulate_diffusion_2d(N, D, dx, dt, T, save_interval=100):
         if (step % save_interval == 0) or any(abs(current_time - t) < dt for t in special_times):
             time_points.append(current_time)
             c_history.append(c.copy())
+def simulate_diffusion_2d_methods(N, D, dx, dt, T, method="Jacobi", omega=1.5, save_interval=100):
+    """Simulate diffusion using Jacobi, Gauss-Seidel, or SOR."""
+    stability_param = 4 * D * dt / (dx * dx)
+    if stability_param > 1:
+        dt = 0.95 * dx**2 / (4 * D)
+    
+    c = initialize_grid(N)
+    n_steps = int(T / dt)
+    time_points = [0.0]
+    c_history = [c.copy()]
+    
+    print(f"Running {method} method for {n_steps} steps")
+
+    for step in range(1, n_steps + 1):
+        c = get_next_grid(c, dt, D, dx, method=method, omega=omega)
+        current_time = step * dt
+        special_times = [0.001, 0.01, 0.1, 1.0]
+
+        if (step % save_interval == 0) or any(abs(current_time - t) < dt for t in special_times):
+            time_points.append(current_time)
+            c_history.append(c.copy())
+
+    return time_points, c_history
             
 
 
@@ -92,12 +147,32 @@ def validate_against_analytical(x_points, times, D, c_history, N):
             plt.plot(x_points, numerical, 'o-', label=f'Numerical, t={t:.3f}')
             plt.plot(x_points, analytical, '--', label=f'Analytical, t={t:.3f}')
     
-    plt.xlabel('x position')
-    plt.ylabel('Concentration c(x)')
+    plt.xlabel('y position')
+    plt.ylabel('Concentration c(y)')
     plt.title('Comparison between numerical and analytical solutions')
     plt.legend()
     plt.grid(True)
     plt.savefig('validation_plot.png', dpi=300)
+    plt.show()
+
+def validate_methods(y_points, times, D, c_history, N):
+    """Compare numerical solutions to analytical steady-state c(y) = y."""
+    plt.figure(figsize=(12, 8))
+    mid_x = N // 2  # Middle of x-axis
+
+    for i, t in enumerate(times):
+        if t > 0:
+            numerical = c_history[i][:, mid_x]  # Extract values along x
+            analytical = np.linspace(0, 1, N)  # Expected c(y) = y
+            plt.plot(y_points, numerical, 'o-', label=f'Numerical, t={t:.3f}')
+            plt.plot(y_points, analytical, '--', label=f'Analytical (c=y), t={t:.3f}')
+
+    plt.xlabel('y position')
+    plt.ylabel('Concentration c(y)')
+    plt.title('Comparison between Numerical and Analytical Solution (c=y)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig('steady_state_validation.png', dpi=300)
     plt.show()
 
 def plot_2d_concentration(times, c_history, N, dx):
@@ -186,3 +261,16 @@ validate_against_analytical(x_points, [time_points[i] for i in selected_indices]
 plot_2d_concentration([time_points[i] for i in selected_indices],[c_history[i] for i in selected_indices], N, dx)
 
 ani = create_animation(time_points, c_history, N, dx)
+
+methods = ["Jacobi", "Gauss-Seidel", "SOR"]
+omega = 1.5  # Relaxation factor for SOR
+
+for method in methods:
+    time_points, c_history = simulate_diffusion_2d(N, D, dx, dt, T, method=method, omega=omega)
+
+    y_points = np.linspace(0, L, N)
+    selected_indices = np.linspace(0, len(time_points) - 1, 5, dtype=int)
+    selected_times = [time_points[i] for i in selected_indices]
+    selected_c_history = [c_history[i] for i in selected_indices]
+
+    validate_methods(y_points, selected_times, D, selected_c_history, N)
