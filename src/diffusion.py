@@ -60,7 +60,7 @@ def explicit_method(grid, dt, D, dx):
 
 #Should we still apply boundary conditions?
 # Consider nupmy array operations due to bad practice numpy + for loops
-def jacobi_method(grid, tolerance, max_iterations):
+def jacobi_method(grid, max_iterations, tolerance=1e-5):
     N = grid.shape[0]
     new_grid = np.copy(grid)
 
@@ -90,7 +90,7 @@ def jacobi_method(grid, tolerance, max_iterations):
     return grid
 
 
-def gauss_seidel_method(grid, tolerance, max_iterations):
+def gauss_seidel_method(grid, max_iterations, tolerance=1e-5):
     N = grid.shape[0]
 
     for iter in range(max_iterations):
@@ -120,7 +120,7 @@ def gauss_seidel_method(grid, tolerance, max_iterations):
     return grid
 
 
-def sor_method(omega):
+def sor_method(grid, omega, max_iterations, tolerance=1e-5):
     """Note that the optimal omega for this problem is estimated between 1.7 and 2. 
     Omega should be between 0 and 2"""
     if omega > 2 or omega < 0:
@@ -228,7 +228,18 @@ def simulate_diffusion_2d(N, D, dx, dt, T, method="Explicit", omega=1.5, save_in
 
     # Compute and store the grid and time step
     for step in range(1, n_steps + 1):
-        c = get_next_grid(c, dt, D, dx, method=method, omega=omega)
+        #c = get_next_grid(c, dt, D, dx, method=method, omega=omega)
+        if method == 'Explicit':
+            c = explicit_method(c, dt, D, dx)
+        elif method == 'Jacobi':
+            c = jacobi_method(c, max_iterations=100)
+        elif method == 'Gauss':
+            c = gauss_seidel_method(c, max_iterations=100)
+        elif method == 'SOR':
+            c = sor_method(c, omega=1.7, max_iterations=100)
+        else:
+            raise ValueError("Incorrect method passed, choose: Explicit, Jacobi, Gauss or SOR")
+
         current_time = step * dt
         
         # Only save grid at specific time intervals or at specific time points
@@ -392,7 +403,7 @@ compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit')
 # ani = create_animation(time_points, c_history, N, dx)
 
 def test_methods(N, D, dx, dt, T, L):
-    methods = ["Jacobi", "Gauss-Seidel", "SOR"]
+    methods = ["Jacobi", "Gauss", "SOR"]
     # methods = ['Explicit']
     omega = 1.5  # Relaxation factor for SOR
 
