@@ -120,8 +120,39 @@ def gauss_seidel_method(grid, tolerance, max_iterations):
     return grid
 
 
-def sor_method():
-    return
+def sor_method(omega):
+    """Note that the optimal omega for this problem is estimated between 1.7 and 2. 
+    Omega should be between 0 and 2"""
+    if omega > 2 or omega < 0:
+        raise ValueError("Omega should be between 0 and 2, optimal lies between 1.7 and 2")
+
+    N = grid.shape[0]
+
+    for iter in range(max_iterations):
+        maximum_difference = 0
+
+        for i in range(1, N-1):
+            for j in range(N):
+                # Save for tolerance
+                old = grid[i, j]
+
+                # Left boundary
+                if j == 0:
+                    grid[i, j] = omega * (0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j+1] + grid[i, N-1])) + (1 - omega) * grid[i, j]
+                # Right boundary
+                elif j == N - 1:
+                    grid[i, j] = omega * (0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, 0])) + (1 - omega) * grid[i, j]
+                else:
+                    grid[i, j] = omega * (0.25 * (grid[i-1, j] + grid[i+1, j] + grid[i, j-1] + grid[i, j+1])) + (1 - omega) * grid[i, j]
+
+                # update maximum difference
+                # Is there a way to do this out of multiple loops?
+                maximum_difference = max(maximum_difference, abs(grid[i, j] - old))
+
+        if maximum_difference < tolerance:
+            break
+    
+    return grid
 
 
 def get_next_grid(grid, dt, D, dx, method="Explicit", omega=1.5):
