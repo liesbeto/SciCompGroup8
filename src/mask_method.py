@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 
+from iteration_methods import initialize_grid
+from visualisation import plot_concentration_for_omega
+
 def check_in_mask(i, j, dx, mask_center, mask_dims, mask_type):
     """
     Checks if a point is inside the mask. Returns a boolean True if it is.

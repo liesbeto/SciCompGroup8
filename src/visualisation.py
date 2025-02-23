@@ -6,7 +6,8 @@ import matplotlib.animation as animation
 import numpy as np
 
 from vibrating_string import VibratingString
-from diffusion import analytical_solution, initialize_grid, explicit_method
+from diffusion import analytical_solution
+from iteration_methods import simulate_diffusion_2d, get_next_grid, initialize_grid
 
 def create_animation_vibstring(vib_string):
     """Creates an animation of the bibrating string class."""
@@ -152,6 +153,19 @@ def create_animation(times, c_history, N, dx):
         
         return [im, title]
     
+    ani = FuncAnimation(fig, update, frames=range(len(times)), blit=True)
+    ani.save('diffusion_animation.gif', writer='pillow', fps=15)
+    plt.show()
+    
+    return ani
+
+    
+    def update(frame):
+        im.set_array(c_history[frame].ravel())
+        title.set_text(f't = {times[frame]:.5f}')
+        
+        return [im, title]
+    
     ani = FuncAnimation(fig, update, frames=range(len(times)), blit=True)    
     return ani
 
@@ -203,7 +217,7 @@ def compare_analytic_solutions(N, L, D, dx, dt, T, method='Explicit'):
 
     Returns an animation object.
     """
-    time_points, c_history, _ = simulate_diffusion_2d(N, D, dx, dt, T, method, 
+    time_points, c_history, max_difference = simulate_diffusion_2d(N, D, dx, dt, T, method, 
         save_interval=100)
     x_points = np.linspace(0, L, N)
     target_times = [0, 0.001, 0.01, 0.1, 1.0]
@@ -321,52 +335,6 @@ def compare_iterative_methods(N, D, dx, dt, T, tol=1e-5, save_interval=1):
     plt.show()  
     
     return plt.gcf()  
-
-
-def tolerances_comparison(N, D, dx, dt, T, tol_values=None, omega=1.7):
-    """
-    Compare the number of iterations needed for convergence across different numerical methods
-    with varying tolerance values.
-
-    Parameters:
-    N (int): Number of grid points in each dimension.
-    D (float): Diffusion coefficient.
-    dx (float): Grid spacing.
-    dt (float): Time step size.
-    T (float): Total simulation time.
-    tol_values (list, optional): Tolerance values to test 
-        (logarithmically spaced if None).
-    omega (float, optional): Relaxation parameter for SOR method 
-        (default is 1.7).
-    """
-     # Generate logarithmically spaced tolerance values
-    if tol_values is None:
-        tol_values = np.logspace(-5, -14, 6)
-
-    methods = ['Jacobi', 'Gauss-Seidel', 'SOR']
-    iter_counts = {method: [] for method in methods}
-
-    for method in methods:
-        for tol in tol_values:
-            iters, _ ,_= simulate_diffusion_2d(N, D, dx, dt, T, method=method, 
-                tol=tol, omega=omega)
-            iter_counts[method].append(iters)
-
- 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
-
-    for i, method in enumerate(methods):
-        axes[i].plot(tol_values, iter_counts[method], marker='o', linestyle='-')
-        axes[i].set_xscale('log')  
-        axes[i].set_xlabel('Tolerance')
-        axes[i].set_title(f'{method} Method')
-        axes[i].grid(True)
-
-    axes[0].set_ylabel('Iterations')
-    plt.suptitle('Iterations needed to converge vs. Tolerance for Different '
-                 'Methods')
-    plt.tight_layout()
-    plt.show()
 
 
 def optimal_omega(N, D, dx, dt, T, tol=1e-5, omega_list=None):
@@ -521,3 +489,48 @@ def initial_condition3(x, L, N):
     else:
         return 0
 
+
+def tolerances_comparison(N, D, dx, dt, T, tol_values=None, omega=1.7):
+    """
+    Compare the number of iterations needed for convergence across different numerical methods
+    with varying tolerance values.
+
+    Parameters:
+    N (int): Number of grid points in each dimension.
+    D (float): Diffusion coefficient.
+    dx (float): Grid spacing.
+    dt (float): Time step size.
+    T (float): Total simulation time.
+    tol_values (list, optional): Tolerance values to test 
+        (logarithmically spaced if None).
+    omega (float, optional): Relaxation parameter for SOR method 
+        (default is 1.7).
+    """
+     # Generate logarithmically spaced tolerance values
+    if tol_values is None:
+        tol_values = np.logspace(-5, -14, 6)
+
+    methods = ['Jacobi', 'Gauss-Seidel', 'SOR']
+    iter_counts = {method: [] for method in methods}
+
+    for method in methods:
+        for tol in tol_values:
+            iters, _ ,_= simulate_diffusion_2d(N, D, dx, dt, T, method=method, 
+                tol=tol, omega=omega)
+            iter_counts[method].append(iters)
+
+ 
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+
+    for i, method in enumerate(methods):
+        axes[i].plot(tol_values, iter_counts[method], marker='o', linestyle='-')
+        axes[i].set_xscale('log')  
+        axes[i].set_xlabel('Tolerance')
+        axes[i].set_title(f'{method} Method')
+        axes[i].grid(True)
+
+    axes[0].set_ylabel('Iterations')
+    plt.suptitle('Iterations needed to converge vs. Tolerance for Different '
+                 'Methods')
+    plt.tight_layout()
+    plt.show()

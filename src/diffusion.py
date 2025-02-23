@@ -358,23 +358,6 @@ def create_animation(times, c_history, N, dx):
     
     return ani
 
-def compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit'):
-    time_points, c_history = simulate_diffusion_2d( N, D, dx, dt, T, method, save_interval=100)
-    # N, D, dx, dt, T, method="Explicit", omega=1.5, save_interval=100
-    x_points = np.linspace(0, L, N)
-    target_times = [0, 0.001, 0.01, 0.1, 1.0]
-    selected_indices = []
-    selected_times = []
-
-    for target in target_times:
-        idx = np.argmin(np.abs(np.array(time_points) - target))#Finding indices which are closest to the target timesteps
-        selected_indices.append(idx)
-        selected_times.append(time_points[idx])
-
-    validate_against_analytical(x_points, [time_points[i] for i in selected_indices], D, [c_history[i] for i in selected_indices], N)
-    plot_2d_concentration([time_points[i] for i in selected_indices],[c_history[i] for i in selected_indices], N, dx)
-    ani = create_animation(time_points, c_history, N, dx)
-
     
 # Simulation parameters
 #N= 50      # Number of grid points (must be square grid for provided update function)
