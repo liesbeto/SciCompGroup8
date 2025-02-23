@@ -91,6 +91,20 @@ def get_next_grid(grid, N, dt, D, dx, method, omega):
         return new_grid, maximum_difference
 
 
+def analytical_solution(x, t, D, max_range=10):
+    """
+    D: diffusion coefficient
+    x: space/place
+    t: time at which to evaluate
+    max_range: """
+
+    sum_analytical = np.zeros_like(x)
+    for i in range(max_range):
+        sum_analytical += erfc((1 - x + 2 * i) / (2*np.sqrt(D*t))) - erfc((1 + x + 2 * i) / (2*np.sqrt(D*t)))
+
+    return sum_analytical
+
+
 def simulate_diffusion_2d(N, D, dx, dt, T, method="Explicit", omega=1.85, tol=1e-5, save_interval=100):
     """
     Simulates the process of diffusion through a 2D grid.

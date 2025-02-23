@@ -6,7 +6,7 @@ import matplotlib.animation as animation
 import numpy as np
 
 from vibrating_string import VibratingString
-from diffusion import analytical_solution
+from iteration_methods import analytical_solution
 from iteration_methods import simulate_diffusion_2d, get_next_grid, initialize_grid
 
 def create_animation_vibstring(vib_string):
