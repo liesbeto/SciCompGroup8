@@ -14,19 +14,30 @@ import random
 #introduce tolerance conditions later
 def analytical_solution(x, t, D, max_range=10):
     """
-    D: diffusion coefficient
-    x: space/place
-    t: time at which to evaluate
-    max_range: """
+    Calculate the analytical diffusion solution using the complementary error function.
 
+    Parameters:
+    x (array): Spatial coordinates for evaluation (1D array).
+    t (float): Time at which to evaluate the solution (must be > 0).
+    D (float): Diffusion coefficient (positive value).
+    max_range (int, optional): Number of terms in the summation (default 
+        is 10).
+
+    Returns an array of analytical solution at the specified spatial 
+        points and time.
+    """
     sum_analytical = np.zeros_like(x)
     for i in range(max_range):
-        sum_analytical += erfc((1 - x + 2 * i) / (2*np.sqrt(D*t))) - erfc((1 + x + 2 * i) / (2*np.sqrt(D*t)))
+        sum_analytical += (erfc((1 - x + 2 * i) / (2 * np.sqrt(D * t))) 
+                           - erfc((1 + x + 2 * i) / (2 * np.sqrt(D * t))))
 
     return sum_analytical
 
 
-def initialize_grid(N):
+def initialize_grid(N: int):
+    """
+    Initialize a 2D grid of size N x N with the bottom row set to 1.0.
+    """
     grid = np.zeros((N, N))
     grid[-1, :] = 1.0
     
