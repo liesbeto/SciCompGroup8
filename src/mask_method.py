@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import numpy as np
+
 def check_in_mask(i, j, dx, mask_center, mask_dims, mask_type):
     """
     Checks if a point is inside the mask. Returns a boolean True if it is.

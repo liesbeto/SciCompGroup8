@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import numpy as np
+
 def initialize_grid(N: int):
     """
     Initialize a 2D grid of size N x N with the bottom row set to 1.0.
