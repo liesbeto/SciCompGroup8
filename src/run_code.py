@@ -38,5 +38,5 @@ if __name__ == "__main__":
     #run_vibrating_string(L, T, N, c)
 
     # Plot analytical solution
-    fig = analytical_plot(D=1, L=1)
+    #fig = analytical_plot(D=1, L=1)
     

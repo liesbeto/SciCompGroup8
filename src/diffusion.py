@@ -366,19 +366,22 @@ def compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit'):
 
     
 # Simulation parameters
-N= 50      # Number of grid points (must be square grid for provided update function)
-L = 1.0   # Domain size
-dx= L/(N-1)  # Grid spacing
-D = 1.0              # Diffusion coefficient
+#N= 50      # Number of grid points (must be square grid for provided update function)
+#L = 1.0   # Domain size
+#dx= L/(N-1)  # Grid spacing
+#D = 1.0              # Diffusion coefficient
 
 # # Stability-limited time step
-dt = 0.24 * dx**2 / D  
-T = 1.0   
+#dt = 0.24 * dx**2 / D  
+##T = 1.0   
     
-# print(f"Grid: {N}x{N}, dx={dx:.5f}, dt={dt:.6f}")
-# print(f"Stability parameter: {4*D*dt/dx**2:.5f} (must be ≤ 1)")
+
+
     
-compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit')
+#compare_analytic_solutions(N, D, dx, dt, T, method = 'Explicit')
+
+
+
 # # Run simulation
 # time_points, c_history = simulate_diffusion_2d( N, D, dx, dt, T,"Explicit", save_interval=100)
 # # N, D, dx, dt, T, method="Explicit", omega=1.5, save_interval=100
@@ -419,4 +422,4 @@ def test_methods(N, D, dx, dt, T, L):
 
         validate_against_analytical(x_points, selected_times, D, selected_c_history, N)
 
-test_methods(N, D, dx, dt, T, L)
+#test_methods(N, D, dx, dt, T, L)
