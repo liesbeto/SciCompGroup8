@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
-
+from scipy.special import erfc
 def initialize_grid(N: int):
     """
     Initialize a 2D grid of size N x N with the bottom row set to 1.0.
@@ -142,7 +142,7 @@ def simulate_diffusion_2d(N, D, dx, dt, T, method="Explicit", omega=1.85, tol=1e
 
     if method == 'Explicit':
         for step in range(1, n_steps + 1):
-            c = get_next_grid(c, N, dt, D, dx, method=method, omega=omega)
+            c,_= get_next_grid(c, N, dt, D, dx, method=method, omega=omega)
             current_time = step * dt
 
             if (step % save_interval == 0) or any(abs(current_time - t) 

@@ -159,15 +159,6 @@ def create_animation(times, c_history, N, dx):
     
     return ani
 
-    
-    def update(frame):
-        im.set_array(c_history[frame].ravel())
-        title.set_text(f't = {times[frame]:.5f}')
-        
-        return [im, title]
-    
-    ani = FuncAnimation(fig, update, frames=range(len(times)), blit=True)    
-    return ani
 
 
 def plot_2d_concentration(times, c_history, N, dx):
@@ -217,7 +208,7 @@ def compare_analytic_solutions(N, L, D, dx, dt, T, method='Explicit'):
 
     Returns an animation object.
     """
-    time_points, c_history, max_difference = simulate_diffusion_2d(N, D, dx, dt, T, method, 
+    time_points, c_history= simulate_diffusion_2d(N, D, dx, dt, T, method, 
         save_interval=100)
     x_points = np.linspace(0, L, N)
     target_times = [0, 0.001, 0.01, 0.1, 1.0]
@@ -233,11 +224,11 @@ def compare_analytic_solutions(N, L, D, dx, dt, T, method='Explicit'):
     validate_against_analytical(x_points, [time_points[i] 
         for i in selected_indices], D, [c_history[i] for i in selected_indices], 
         N)
-    plot_2d_concentration([time_points[i] for i in selected_indices], 
-        [c_history[i] for i in selected_indices], N, dx)
-    ani = create_animation(time_points, c_history, N, dx)
+    # plot_2d_concentration([time_points[i] for i in selected_indices], 
+    #     [c_history[i] for i in selected_indices], N, dx)
+    # ani = create_animation(time_points, c_history, N, dx)
     
-    return ani
+    # return ani
 
 
 def compare_numerical_methods(N, D, dx, dt, T, L, methods=['Jacobi', 
